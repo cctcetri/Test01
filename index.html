@@ -14,13 +14,53 @@
 <script> //javascript
 $(document).ready(function(){
   let DEBUG = 1; //1로 하면 거기서 오류시 나오는 문구를 나오게 하고 0으로 하면 문구를 안나오게 한다.
+  let privateKey = "Kzfpa8hmF1SchLSTjnAWqGXzQDogm1qt2ttgxdShqKpHfsn3bd5q";
   let client = new CoinStack('c7dbfacbdf1510889b38c01b8440b1', '10e88e9904f29c98356fd2d12b26de', 'c3sp2.blocko.io', 'https');
-
   if (DEBUG) {
 	console.log("client: ", client);
     console.log('starting...');
   }
+  
+  $('#newSend').on('click', function() {
+	let fromaccount = $("#i_address").val( account );
+	let toaccount = $("#to_address").val( account );
+	let coin = $("#coin").val( account );
+	
+	let txBuilder = client.createTransactionBuilder();
+     txBuilder.addOutput(toaccount, CoinStack.Math.toSatoshi(coin));
+     txBuilder.setInput(fromaccount);
+     txBuilder.buildTransaction(function (err, tx) {
+     try {
+       
+      tx.sign(privateKey);
+       
+       let rawTx = tx.serialize();
+       client.sendTransaction(rawTx, function (err) {
+	 if (!err) {
+	     console.log("definition: ", tx.getHash());
+	     alert("거래가 완료 되었습니다..!!!");
+	 }
+       });
+    } catch (e) {
+       console.log(e)
+     
+      } //end of try
+  
+    }) // end of txbuilder
+  }) // end of $('#newSend').on
 
+  $('#newBalance').on('click', function(){
+	let addr = $("#i_address").val();
+  	client.getBalance(addr, function (err, balance) {
+	    if (!err) {
+			var total = CoinStack.Math.toBitcoin(balance);
+			$('#message').text(" total: " + total);
+			console.log("address: ", addr);
+			console.log('total: ',total);
+		}
+     });   // end of client.getBalance
+  })   // end of $('#newBalance').on
+    
   $('#newAccount').on('click', function(){
     let privateKey = CoinStack.ECKey.createKey(); // 개인 비밀번호 키를 만든다.
     if (DEBUG) console.log("privateKey : ", privateKey); // f12 console창에 나온다.
@@ -31,14 +71,14 @@ $(document).ready(function(){
 	$("#i_address").val( account );
 	
 	$('#message').text(" account: " + account);
-	alert("Account 생성이 완료 되었습니다..!!!" + account ); // 확인 누르면 popup창 뜨는것.
+	alert("Account 생성이 완료 되었습니다..!!!" + account ); // new Account 누르면 popup창 뜨는것.
 	// $('#i_password').val(privateKey);
 	// <input id="myField" type="text" name="email"/>
         // getting the value
         // let email = $("#myField").val();
         // setting the value
         // $("#myField").val( "new value here" );
-	// <h5>송신처  <input id="i_address" size="45" placeholder=""></input> </h5> 밑에다 new버튼 밑에 복사해보자.
+	// <h5>송신처  <input id="i_address" size="45" placeholder=""></input> </h5>  아래쪽 전송버튼 밑에 복사해보자.
   })    // end of $('#newAccount').on 이런식으로 이게 어디 것인지 써준다.
 })   // end of $(document).ready
 </script> 
@@ -51,8 +91,12 @@ $(document).ready(function(){
     <h2><strong> Welcome to Coinstack </strong></h2> 
  	<div id="tablePlace"></div>
 	<button id="newAccount">New Account</button>
-	<button id="new">New</button>
-	<h5>송신처  <input id="i_address" size="45" placeholder="이름을 입력하세요"></input> </h5>
+	<button id="newBalance">잔액조회</button>
+	<button id="newSend">전송</button>
+	
+	<h5>송신처  <input id="i_address" value="1LRuApr5iJWbb4c7jYFMFNiG3eAtxzMJpa" size="45" placeholder="송신처"></input> </h5>
+	<h5>수신처  <input id="to_address" size="45" placeholder="수신처"></input> </h5>
+	<h5>코인  <input id="coin" size="45" placeholder="코인"></input> </h5>
   </div>
   <br>
   <br>
